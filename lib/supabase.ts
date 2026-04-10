@@ -1,20 +1,22 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-function getClient() {
-  const cookieStore = cookies()
+async function getClient() {
+  const cookieStore = await cookies()
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             )
-          } catch {}
+          } catch {
+            // The "setAll" method was called from a Server Component.
+          }
         },
       },
     }
@@ -23,7 +25,7 @@ function getClient() {
 
 // ─── Patients ──────────────────────────────────────────────────────────────
 export async function getPatients(search?: string) {
-  const supabase = getClient()
+  const supabase = await getClient()
   let query = supabase.from('patients').select('*').order('full_name')
   if (search) {
     query = query.or(
@@ -36,28 +38,32 @@ export async function getPatients(search?: string) {
 }
 
 export async function getPatient(id: string) {
-  const { data, error } = await getClient()
+  const supabase = await getClient()
+  const { data, error } = await supabase
     .from('patients').select('*').eq('id', id).single()
   if (error) throw error
   return data
 }
 
 export async function createPatient(patient: Omit<import('./types').Patient, 'id' | 'created_at' | 'updated_at'>) {
-  const { data, error } = await getClient()
+  const supabase = await getClient()
+  const { data, error } = await supabase
     .from('patients').insert(patient).select().single()
   if (error) throw error
   return data
 }
 
 export async function updatePatient(id: string, patient: Partial<import('./types').Patient>) {
-  const { data, error } = await getClient()
+  const supabase = await getClient()
+  const { data, error } = await supabase
     .from('patients').update(patient).eq('id', id).select().single()
   if (error) throw error
   return data
 }
 
 export async function deletePatient(id: string) {
-  const { error } = await getClient().from('patients').delete().eq('id', id)
+  const supabase = await getClient()
+  const { error } = await supabase.from('patients').delete().eq('id', id)
   if (error) throw error
 }
 
@@ -67,7 +73,7 @@ export async function getAppointments(filters?: {
   status?: string
   patient_id?: string
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
   let query = supabase
     .from('appointments')
     .select('*, patient:patients(id, full_name, phone)')
@@ -87,7 +93,8 @@ export async function getAppointments(filters?: {
 }
 
 export async function getAppointment(id: string) {
-  const { data, error } = await getClient()
+  const supabase = await getClient()
+  const { data, error } = await supabase
     .from('appointments')
     .select('*, patient:patients(*)')
     .eq('id', id).single()
@@ -96,26 +103,30 @@ export async function getAppointment(id: string) {
 }
 
 export async function createAppointment(appt: Omit<import('./types').Appointment, 'id' | 'created_at' | 'updated_at' | 'patient'>) {
-  const { data, error } = await getClient()
+  const supabase = await getClient()
+  const { data, error } = await supabase
     .from('appointments').insert(appt).select().single()
   if (error) throw error
   return data
 }
 
 export async function updateAppointment(id: string, appt: Partial<import('./types').Appointment>) {
-  const { data, error } = await getClient()
+  const supabase = await getClient()
+  const { data, error } = await supabase
     .from('appointments').update(appt).eq('id', id).select().single()
   if (error) throw error
   return data
 }
 
 export async function deleteAppointment(id: string) {
-  const { error } = await getClient().from('appointments').delete().eq('id', id)
+  const supabase = await getClient()
+  const { error } = await supabase.from('appointments').delete().eq('id', id)
   if (error) throw error
 }
 
 export async function getOccupiedSlots(date: string): Promise<string[]> {
-  const { data, error } = await getClient()
+  const supabase = await getClient()
+  const { data, error } = await supabase
     .from('appointments')
     .select('scheduled_at')
     .gte('scheduled_at', `${date}T00:00:00`)
