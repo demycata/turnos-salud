@@ -6,11 +6,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    userEmail = user?.email
-  } catch {}
+    userEmail = user?.email ?? undefined
+  } catch {
+    // No session — middleware will redirect, this is just for the email display
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-50">
+    <div className="flex h-screen overflow-hidden bg-slate-50">
       <Sidebar userEmail={userEmail} />
       <main className="flex-1 overflow-y-auto">
         {children}

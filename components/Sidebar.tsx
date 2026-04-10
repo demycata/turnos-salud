@@ -2,7 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, CalendarDays, Heart, Menu, X, LogOut } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  Heart,
+  Menu,
+  X,
+  LogOut,
+  DollarSign,
+} from 'lucide-react'
 import { useState } from 'react'
 import clsx from 'clsx'
 import { createClient } from '@/lib/supabase-browser'
@@ -11,6 +20,7 @@ const NAV = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/patients', icon: Users, label: 'Pacientes' },
   { href: '/appointments', icon: CalendarDays, label: 'Turnos' },
+  { href: '/prices', icon: DollarSign, label: 'Precios' },
 ]
 
 export default function Sidebar({ userEmail }: { userEmail?: string }) {
@@ -84,21 +94,23 @@ export default function Sidebar({ userEmail }: { userEmail?: string }) {
         })}
       </nav>
 
-      {/* Footer with user + logout */}
+      {/* Footer / user */}
       <div className="px-2 py-3 border-t border-slate-800">
         {!collapsed && userEmail && (
-          <p className="text-xs text-slate-500 px-3 mb-2 truncate">{userEmail}</p>
+          <div className="px-3 py-2 mb-1">
+            <p className="text-xs text-slate-500 truncate">{userEmail}</p>
+          </div>
         )}
         <button
           onClick={handleLogout}
           className={clsx(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-all duration-150 w-full',
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium w-full text-left transition-all duration-150 text-slate-400 hover:bg-slate-800 hover:text-red-400',
             collapsed && 'justify-center px-2'
           )}
-          title={collapsed ? 'Cerrar sesión' : undefined}
+          title={collapsed ? 'Cerrar sesion' : undefined}
         >
           <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-          {!collapsed && 'Cerrar sesión'}
+          {!collapsed && 'Cerrar sesion'}
         </button>
       </div>
     </aside>

@@ -1,19 +1,20 @@
 import Link from 'next/link'
-import { ArrowLeft, CalendarPlus, Phone, Mail, MapPin, Calendar, Edit, Trash2 } from 'lucide-react'
+import { ArrowLeft, CalendarPlus, Phone, Mail, MapPin, Calendar, Edit } from 'lucide-react'
 import { getPatient, getAppointments } from '@/lib/supabase'
-import { format, isPast } from 'date-fns'
+import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { STATUS_LABELS, STATUS_COLORS, type Appointment } from '@/lib/types'
 import clsx from 'clsx'
 import { notFound } from 'next/navigation'
 import DeletePatientButton from './DeletePatientButton'
+import PatientAppointmentsClient from './PatientAppointmentsClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function PatientDetailPage({ params }: { params: { id: string } }) {
   let patient, appointments
   try {
-    [patient, appointments] = await Promise.all([
+    ;[patient, appointments] = await Promise.all([
       getPatient(params.id),
       getAppointments({ patient_id: params.id }),
     ])
@@ -22,17 +23,37 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
   }
 
   const now = new Date()
-  const upcoming = appointments.filter((a: Appointment) => new Date(a.scheduled_at) >= now && a.status !== 'cancelled')
-  const past = appointments.filter((a: Appointment) => new Date(a.scheduled_at) < now || a.status === 'done' || a.status === 'cancelled')
+  const upcoming = appointments.filter(
+    (a: Appointment) => new Date(a.scheduled_at) >= now && a.status !== 'cancelled'
+  )
+  const past = appointments.filter(
+    (a: Appointment) => new Date(a.scheduled_at) < now || a.status === 'done' || a.status === 'cancelled'
+  )
+
+  // CSV data for this patient's appointments
+  const csvData = appointments.map((a: Appointment) => ({
+    Fecha: format(new Date(a.scheduled_at), 'dd/MM/yyyy'),
+    Hora: format(new Date(a.scheduled_at), 'HH:mm'),
+    Servicio: a.service ?? '',
+    Profesional: a.professional ?? '',
+    Estado: STATUS_LABELS[a.status],
+    'Medio de pago': a.payment_method ?? '',
+    Importe: a.amount ?? 0,
+    Descripcion: a.description ?? '',
+    'Notas internas': a.internal_notes ?? '',
+  }))
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Link href="/patients" className="btn-secondary py-1.5 px-2.5">
           <ArrowLeft className="w-4 h-4" />
         </Link>
-        <h1 className="text-2xl font-semibold text-slate-900 font-display flex-1">{patient.full_name}</h1>
+        <h1 className="text-2xl font-semibold text-slate-900 font-display flex-1">
+          {patient.full_name}
+        </h1>
+        <PatientAppointmentsClient csvData={csvData} patientName={patient.full_name} />
         <Link href={`/patients/${patient.id}/edit`} className="btn-secondary">
           <Edit className="w-4 h-4" /> Editar
         </Link>
@@ -53,7 +74,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 flex-1">
             {patient.phone && (
               <div>
-                <p className="text-xs text-slate-400 mb-0.5">Teléfono</p>
+                <p className="text-xs text-slate-400 mb-0.5">Telefono</p>
                 <p className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-slate-400" /> {patient.phone}
                 </p>
@@ -108,20 +129,11 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
         )}
       </div>
 
-      {/* Upcoming appointments */}
-      <AppointmentSection
-        title="Turnos próximos"
-        appointments={upcoming}
-        emptyMessage="No tiene turnos futuros"
-        showActions
-      />
+      {/* Upcoming */}
+      <AppointmentSection title="Turnos proximos" appointments={upcoming} emptyMessage="No tiene turnos futuros" showActions />
 
-      {/* Past appointments */}
-      <AppointmentSection
-        title="Historial clínico"
-        appointments={past}
-        emptyMessage="Sin historial aún"
-      />
+      {/* History */}
+      <AppointmentSection title="Historial clinico" appointments={past} emptyMessage="Sin historial aun" />
     </div>
   )
 }
@@ -165,9 +177,15 @@ function AppointmentSection({
                     )}
                     {appt.internal_notes && (
                       <p className="text-xs text-amber-600 mt-1 bg-amber-50 rounded px-2 py-0.5 inline-block">
-                        📝 {appt.internal_notes}
+                        Nota: {appt.internal_notes}
                       </p>
                     )}
+                    {appt.amount ? (
+                      <p className="text-xs text-emerald-600 mt-1">
+                        {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(appt.amount)}
+                        {appt.payment_method && ` · ${appt.payment_method}`}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

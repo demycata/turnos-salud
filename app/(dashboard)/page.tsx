@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import {
   Users, CalendarDays, CalendarPlus, UserPlus,
-  Clock, CheckCircle2, XCircle, AlertCircle,
+  Clock, CheckCircle2,
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { getAppointments } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { STATUS_LABELS, STATUS_COLORS, type Appointment } from '@/lib/types'
@@ -11,17 +12,18 @@ import clsx from 'clsx'
 
 async function getDashboardData() {
   const today = format(new Date(), 'yyyy-MM-dd')
-  const [{ count: totalPatients }, { count: totalAppts }, { data: todayAppts }] =
-    await Promise.all([
-      supabase.from('patients').select('*', { count: 'exact', head: true }),
-      supabase.from('appointments').select('*', { count: 'exact', head: true }),
-      supabase
-        .from('appointments')
-        .select('*, patient:patients(full_name, phone)')
-        .gte('scheduled_at', `${today}T00:00:00`)
-        .lte('scheduled_at', `${today}T23:59:59`)
-        .order('scheduled_at'),
-    ])
+  const supabase = createClient()
+
+  const [
+    { count: totalPatients },
+    { count: totalAppts },
+    todayAppts,
+  ] = await Promise.all([
+    supabase.from('patients').select('*', { count: 'exact', head: true }),
+    supabase.from('appointments').select('*', { count: 'exact', head: true }),
+    getAppointments({ date: today }),
+  ])
+
   return { totalPatients, totalAppts, todayAppts: todayAppts || [] }
 }
 
@@ -34,9 +36,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
       <div>
-        <p className="text-sm text-slate-500 font-medium">
+        <p className="text-sm text-slate-500 font-medium capitalize">
           {format(today, "EEEE d 'de' MMMM, yyyy", { locale: es })}
         </p>
         <h1 className="text-2xl font-semibold text-slate-900 font-display mt-0.5">
@@ -44,12 +45,8 @@ export default async function DashboardPage() {
         </h1>
       </div>
 
-      {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Link
-          href="/patients/new"
-          className="card p-5 flex items-center gap-4 hover:shadow-card-hover transition-shadow group"
-        >
+        <Link href="/patients/new" className="card p-5 flex items-center gap-4 hover:shadow-card-hover transition-shadow group">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
             <UserPlus className="w-5 h-5 text-indigo-600" />
           </div>
@@ -58,10 +55,7 @@ export default async function DashboardPage() {
             <p className="text-xs text-slate-400">Registrar un paciente nuevo</p>
           </div>
         </Link>
-        <Link
-          href="/appointments/new"
-          className="card p-5 flex items-center gap-4 hover:shadow-card-hover transition-shadow group"
-        >
+        <Link href="/appointments/new" className="card p-5 flex items-center gap-4 hover:shadow-card-hover transition-shadow group">
           <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
             <CalendarPlus className="w-5 h-5 text-emerald-600" />
           </div>
@@ -72,7 +66,6 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Pacientes', value: totalPatients ?? 0, icon: Users, color: 'text-indigo-600 bg-indigo-50' },
@@ -82,7 +75,7 @@ export default async function DashboardPage() {
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="card p-5">
             <div className={clsx('w-9 h-9 rounded-xl flex items-center justify-center mb-3', color)}>
-              <Icon className="w-4.5 h-4.5" />
+              <Icon className="w-4 h-4" />
             </div>
             <p className="text-2xl font-bold text-slate-900">{value}</p>
             <p className="text-xs text-slate-400 mt-0.5">{label}</p>
@@ -90,7 +83,6 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Today's appointments */}
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="font-semibold text-slate-800">Turnos de hoy</h2>

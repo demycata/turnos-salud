@@ -1,30 +1,11 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from './supabase-browser'
 
 function getClient() {
-  const cookieStore = cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {}
-        },
-      },
-    }
-  )
+  return createClient()
 }
 
-// ─── Patients ──────────────────────────────────────────────────────────────
 export async function getPatients(search?: string) {
-  const supabase = getClient()
-  let query = supabase.from('patients').select('*').order('full_name')
+  let query = getClient().from('patients').select('*').order('full_name')
   if (search) {
     query = query.or(
       `full_name.ilike.%${search}%,phone.ilike.%${search}%,document.ilike.%${search}%`
@@ -59,31 +40,6 @@ export async function updatePatient(id: string, patient: Partial<import('./types
 export async function deletePatient(id: string) {
   const { error } = await getClient().from('patients').delete().eq('id', id)
   if (error) throw error
-}
-
-// ─── Appointments ──────────────────────────────────────────────────────────
-export async function getAppointments(filters?: {
-  date?: string
-  status?: string
-  patient_id?: string
-}) {
-  const supabase = getClient()
-  let query = supabase
-    .from('appointments')
-    .select('*, patient:patients(id, full_name, phone)')
-    .order('scheduled_at')
-
-  if (filters?.date) {
-    query = query
-      .gte('scheduled_at', `${filters.date}T00:00:00`)
-      .lte('scheduled_at', `${filters.date}T23:59:59`)
-  }
-  if (filters?.status) query = query.eq('status', filters.status)
-  if (filters?.patient_id) query = query.eq('patient_id', filters.patient_id)
-
-  const { data, error } = await query
-  if (error) throw error
-  return data
 }
 
 export async function getAppointment(id: string) {

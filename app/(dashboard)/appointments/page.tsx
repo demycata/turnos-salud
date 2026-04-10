@@ -5,10 +5,11 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { STATUS_LABELS, STATUS_COLORS, type Appointment, type AppointmentStatus } from '@/lib/types'
 import clsx from 'clsx'
+import AppointmentsClient from './AppointmentsClient'
 
 export const dynamic = 'force-dynamic'
 
-const ALL_STATUSES: { value: string; label: string }[] = [
+const ALL_STATUSES = [
   { value: '', label: 'Todos' },
   { value: 'pending', label: 'Pendientes' },
   { value: 'done', label: 'Realizados' },
@@ -26,6 +27,21 @@ export default async function AppointmentsPage({
     status: searchParams.status,
   })
 
+  // Prepare flat data for CSV export
+  const csvData = appointments.map((a: Appointment & { patient: any }) => ({
+    Fecha: format(new Date(a.scheduled_at), 'dd/MM/yyyy'),
+    Hora: format(new Date(a.scheduled_at), 'HH:mm'),
+    Paciente: a.patient?.full_name ?? '',
+    Telefono: a.patient?.phone ?? '',
+    Servicio: a.service ?? '',
+    Profesional: a.professional ?? '',
+    Estado: STATUS_LABELS[a.status],
+    'Medio de pago': a.payment_method ?? '',
+    Importe: a.amount ?? 0,
+    Descripcion: a.description ?? '',
+    'Notas internas': a.internal_notes ?? '',
+  }))
+
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
@@ -34,31 +50,32 @@ export default async function AppointmentsPage({
           <h1 className="text-2xl font-semibold text-slate-900 font-display">Turnos</h1>
           <p className="text-sm text-slate-400 mt-0.5">{appointments.length} turnos encontrados</p>
         </div>
-        <Link href="/appointments/new" className="btn-primary">
-          <CalendarPlus className="w-4 h-4" /> Nuevo turno
-        </Link>
+        <div className="flex gap-2">
+          <AppointmentsClient csvData={csvData} />
+          <Link href="/appointments/new" className="btn-primary">
+            <CalendarPlus className="w-4 h-4" /> Nuevo turno
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <form className="flex items-center gap-2">
-          <input
-            name="date"
-            type="date"
-            defaultValue={searchParams.date}
-            className="input-field w-44"
-          />
-          <select name="status" defaultValue={searchParams.status} className="input-field w-40">
-            {ALL_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-          <button type="submit" className="btn-secondary">
-            <Filter className="w-4 h-4" /> Filtrar
-          </button>
-          <Link href="/appointments" className="btn-secondary text-slate-400">Limpiar</Link>
-        </form>
-      </div>
+      <form className="flex flex-wrap gap-2 items-center">
+        <input
+          name="date"
+          type="date"
+          defaultValue={searchParams.date}
+          className="input-field w-44"
+        />
+        <select name="status" defaultValue={searchParams.status} className="input-field w-40">
+          {ALL_STATUSES.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+        <button type="submit" className="btn-secondary">
+          <Filter className="w-4 h-4" /> Filtrar
+        </button>
+        <Link href="/appointments" className="btn-secondary text-slate-400">Limpiar</Link>
+      </form>
 
       {/* Table */}
       <div className="card overflow-hidden">
@@ -71,7 +88,7 @@ export default async function AppointmentsPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-left">
-                  {['Fecha y hora', 'Paciente', 'Servicio', 'Profesional', 'Estado', ''].map((h) => (
+                  {['Fecha y hora', 'Paciente', 'Servicio', 'Profesional', 'Importe', 'Estado', ''].map((h) => (
                     <th key={h} className="px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
                       {h}
                     </th>
@@ -102,6 +119,11 @@ export default async function AppointmentsPage({
                     </td>
                     <td className="px-5 py-3.5 text-slate-600">{appt.service ?? '—'}</td>
                     <td className="px-5 py-3.5 text-slate-600">{appt.professional ?? '—'}</td>
+                    <td className="px-5 py-3.5 text-slate-600">
+                      {appt.amount
+                        ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(appt.amount)
+                        : '—'}
+                    </td>
                     <td className="px-5 py-3.5">
                       <span className={clsx('badge-status', STATUS_COLORS[appt.status])}>
                         {STATUS_LABELS[appt.status]}

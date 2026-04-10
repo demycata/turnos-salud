@@ -3,6 +3,7 @@ import { UserPlus, Search, Phone, MapPin, ChevronRight } from 'lucide-react'
 import { getPatients } from '@/lib/supabase'
 import type { Patient } from '@/lib/types'
 import { format } from 'date-fns'
+import PatientsClient from './PatientsClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,19 @@ export default async function PatientsPage({
 }) {
   const patients = await getPatients(searchParams.q)
 
+  const csvData = patients.map((p: Patient) => ({
+    'Nombre completo': p.full_name,
+    Telefono: p.phone,
+    Email: p.email ?? '',
+    Documento: p.document ?? '',
+    'Fecha de nacimiento': p.birth_date ? format(new Date(p.birth_date), 'dd/MM/yyyy') : '',
+    Sexo: p.sex ?? '',
+    Barrio: p.neighborhood ?? '',
+    Direccion: p.address ?? '',
+    Notas: p.notes ?? '',
+    'Registrado el': format(new Date(p.created_at), 'dd/MM/yyyy'),
+  }))
+
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
@@ -21,9 +35,12 @@ export default async function PatientsPage({
           <h1 className="text-2xl font-semibold text-slate-900 font-display">Pacientes</h1>
           <p className="text-sm text-slate-400 mt-0.5">{patients.length} registros</p>
         </div>
-        <Link href="/patients/new" className="btn-primary">
-          <UserPlus className="w-4 h-4" /> Nuevo paciente
-        </Link>
+        <div className="flex gap-2">
+          <PatientsClient csvData={csvData} />
+          <Link href="/patients/new" className="btn-primary">
+            <UserPlus className="w-4 h-4" /> Nuevo paciente
+          </Link>
+        </div>
       </div>
 
       {/* Search */}
@@ -32,7 +49,7 @@ export default async function PatientsPage({
         <input
           name="q"
           defaultValue={searchParams.q}
-          placeholder="Buscar por nombre, teléfono o documento…"
+          placeholder="Buscar por nombre, telefono o documento..."
           className="input-field pl-9"
         />
       </form>

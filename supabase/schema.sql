@@ -75,3 +75,14 @@ INSERT INTO patients (full_name, phone, email, address, neighborhood, birth_date
   ('María González', '1155556789', 'maria@email.com', 'Av. San Martín 1234', 'San Miguel', '1990-03-15', 'F', '30123456'),
   ('Carlos Rodríguez', '1144447890', 'carlos@email.com', 'Belgrano 567', 'Moreno', '1985-07-22', 'M', '28765432'),
   ('Jazmin Díaz', '1125681988', 'monifer577@gmail.com', 'Corrientes 890', 'Moreno', '2009-11-28', 'F', '49884115');
+
+-- ============================================================
+-- CREAR PRIMER USUARIO (ejecutar separado despues del schema)
+-- ============================================================
+-- Opcion 1: Desde Supabase Dashboard
+--   Authentication -> Users -> Add user -> ingresa email y password
+--
+-- Opcion 2: Via SQL (cambia el email y password)
+-- SELECT supabase_auth.create_user(
+--   '{"email": "admin@tuclinica.com", "password": "tu_password_seguro", "email_confirm": true}'::jsonb
+-- );

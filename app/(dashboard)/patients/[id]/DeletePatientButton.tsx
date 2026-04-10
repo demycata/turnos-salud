@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
-import { deletePatient } from '@/lib/supabase'
+import { deletePatient } from '@/lib/supabase-client'
 
 export default function DeletePatientButton({ id }: { id: string }) {
   const router = useRouter()

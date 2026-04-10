@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save } from 'lucide-react'
-import { getPatient, updatePatient } from '@/lib/supabase'
+import { getPatient, updatePatient } from '@/lib/supabase-client'
 
 export default function EditPatientPage({ params }: { params: { id: string } }) {
   const router = useRouter()

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Clock } from 'lucide-react'
-import { createAppointment, getPatients, getOccupiedSlots } from '@/lib/supabase'
+import { createAppointment, getPatients, getOccupiedSlots } from '@/lib/supabase-client'
 import { format } from 'date-fns'
 import clsx from 'clsx'
 
