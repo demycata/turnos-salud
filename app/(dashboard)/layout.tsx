@@ -4,12 +4,10 @@ import { createClient } from '@/lib/supabase-server'
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   let userEmail: string | undefined
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     userEmail = user?.email ?? undefined
-  } catch {
-    // No session — middleware will redirect, this is just for the email display
-  }
+  } catch {}
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">

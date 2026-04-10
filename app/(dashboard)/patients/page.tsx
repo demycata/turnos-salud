@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic'
 export default async function PatientsPage({
   searchParams,
 }: {
-  searchParams: { q?: string }
+  searchParams: Promise<{ q?: string }>
 }) {
-  const patients = await getPatients(searchParams.q)
+  const { q } = await searchParams
+  const patients = await getPatients(q)
 
   const csvData = patients.map((p: Patient) => ({
     'Nombre completo': p.full_name,
@@ -29,7 +30,6 @@ export default async function PatientsPage({
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 font-display">Pacientes</h1>
@@ -43,18 +43,16 @@ export default async function PatientsPage({
         </div>
       </div>
 
-      {/* Search */}
       <form className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           name="q"
-          defaultValue={searchParams.q}
+          defaultValue={q}
           placeholder="Buscar por nombre, telefono o documento..."
           className="input-field pl-9"
         />
       </form>
 
-      {/* List */}
       {patients.length === 0 ? (
         <div className="card py-16 text-center">
           <p className="text-slate-400 text-sm">No se encontraron pacientes</p>
