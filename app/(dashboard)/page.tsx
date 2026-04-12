@@ -12,7 +12,7 @@ import clsx from 'clsx'
 
 async function getDashboardData() {
   const today = format(new Date(), 'yyyy-MM-dd')
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const [
     { count: totalPatients },
