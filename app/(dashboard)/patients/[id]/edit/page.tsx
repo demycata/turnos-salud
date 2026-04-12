@@ -1,20 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getPatient, updatePatient } from '@/lib/supabase-client'
 
-export default function EditPatientPage({ params }: { params: { id: string } }) {
+export default function EditPatientPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [patient, setPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getPatient(params.id).then(setPatient).catch(console.error)
-  }, [params.id])
+    getPatient(id).then(setPatient).catch(console.error)
+  }, [id])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,7 +23,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
     setError(null)
     const form = new FormData(e.currentTarget)
     try {
-      await updatePatient(params.id, {
+      await updatePatient(id, {
         full_name: form.get('full_name') as string,
         phone: form.get('phone') as string,
         email: form.get('email') as string,
@@ -33,7 +34,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
         document: form.get('document') as string,
         notes: form.get('notes') as string,
       })
-      router.push(`/patients/${params.id}`)
+      router.push(`/patients/${id}`)
     } catch (err: any) {
       setError(err.message)
       setLoading(false)
@@ -45,7 +46,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
   return (
     <div className="p-8 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href={`/patients/${params.id}`} className="btn-secondary py-1.5 px-2.5">
+        <Link href={`/patients/${id}`} className="btn-secondary py-1.5 px-2.5">
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <h1 className="text-2xl font-semibold text-slate-900 font-display">Editar paciente</h1>
@@ -99,7 +100,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
           </div>
         </div>
         <div className="flex justify-end gap-3 pt-2">
-          <Link href={`/patients/${params.id}`} className="btn-secondary">Cancelar</Link>
+          <Link href={`/patients/${id}`} className="btn-secondary">Cancelar</Link>
           <button type="submit" disabled={loading} className="btn-primary">
             <Save className="w-4 h-4" /> {loading ? 'Guardando…' : 'Guardar cambios'}
           </button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Trash2, Clock } from 'lucide-react'
@@ -28,7 +28,8 @@ const STATUSES: { value: AppointmentStatus; label: string }[] = [
   { value: 'no_show', label: 'Ausente' },
 ]
 
-export default function EditAppointmentPage({ params }: { params: { id: string } }) {
+export default function EditAppointmentPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [appt, setAppt] = useState<any>(null)
   const [selectedDate, setSelectedDate] = useState('')
@@ -38,13 +39,13 @@ export default function EditAppointmentPage({ params }: { params: { id: string }
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getAppointment(params.id).then((a) => {
+    getAppointment(id).then((a) => {
       setAppt(a)
       const dt = new Date(a.scheduled_at)
       setSelectedDate(format(dt, 'yyyy-MM-dd'))
       setSelectedTime(format(dt, 'HH:mm'))
     }).catch(console.error)
-  }, [params.id])
+  }, [id])
 
   useEffect(() => {
     if (selectedDate) {
@@ -62,7 +63,7 @@ export default function EditAppointmentPage({ params }: { params: { id: string }
     setError(null)
     const form = new FormData(e.currentTarget)
     try {
-      await updateAppointment(params.id, {
+      await updateAppointment(id, {
         scheduled_at: `${selectedDate}T${selectedTime}:00`,
         professional: form.get('professional') as string,
         service: form.get('service') as string,
@@ -81,7 +82,7 @@ export default function EditAppointmentPage({ params }: { params: { id: string }
 
   async function handleDelete() {
     if (!confirm('¿Eliminar este turno?')) return
-    await deleteAppointment(params.id)
+    await deleteAppointment(id)
     router.push(`/patients/${appt?.patient_id}`)
   }
 
