@@ -1,35 +1,125 @@
 # 🏥 Salud Turnos
 
-Sistema de gestión de turnos para centros de salud. Uso exclusivamente interno del personal.
+Sistema de gestión de turnos y pacientes para centros de salud. Aplicación interna con autenticación segura mediante Supabase.
 
 ---
 
-## Stack
+## 📋 Características
 
-- **Frontend**: Next.js 14 (App Router) + TypeScript
-- **Estilos**: Tailwind CSS (tipografías DM Sans + Sora)
-- **Backend**: Supabase (PostgreSQL + Auth)
-- **Deploy**: Vercel (recomendado)
-
----
-
-## 🚀 Pasos para el deploy
-
-### 1. Crear el proyecto en Supabase
-
-1. Ir a [supabase.com](https://supabase.com) → **New project**
-2. Elegir nombre, contraseña y región (ej: South America)
-3. Una vez creado, ir a **SQL Editor** y ejecutar el contenido de `supabase/schema.sql`
-4. Copiar las credenciales desde **Project Settings → API**:
-   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon public key` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-> ⚠️ La autenticación por defecto usa RLS: solo usuarios autenticados pueden acceder.
-> Si la app es completamente interna y sin login, podés temporalmente deshabilitar RLS en Supabase (Table Editor → cada tabla → RLS off). Para producción se recomienda configurar Supabase Auth.
+- ✅ **Gestión de Turnos**: Crear, editar y cancelar citas médicas
+- ✅ **Gestión de Pacientes**: Registro completo de pacientes con historial
+- ✅ **Gestión de Precios**: Control de tarifas y servicios
+- ✅ **Autenticación Segura**: Login mediante Supabase Auth
+- ✅ **Exportación de Datos**: Descargar información en CSV
+- ✅ **Interfaz Responsiva**: Optimizada para desktop y móvil
+- ✅ **Base de Datos Robusta**: PostgreSQL con Row Level Security (RLS)
 
 ---
 
-### 2. Desarrollo local
+## 💻 Stack Tecnológico
+
+| Aspecto | Tecnología |
+|--------|-----------|
+| **Framework** | Next.js 15.3.0 (App Router) |
+| **Lenguaje** | TypeScript 5 |
+| **Frontend** | React 19 + Tailwind CSS 3.4 |
+| **Backend** | Supabase (PostgreSQL + Auth) |
+| **UI Icons** | Lucide React |
+| **Fechas** | Date-fns 3.6 |
+| **Deploy** | Vercel (recomendado) |
+
+---
+
+## 🏗️ Estructura del Proyecto
+
+```
+salud-turnos/
+├── app/                          # Rutas y vistas de Next.js
+│   ├── (dashboard)/             # Rutas autenticadas (grupo de layout)
+│   │   ├── appointments/        # Gestión de turnos
+│   │   │   ├── [id]/edit/      # Editar turno
+│   │   │   └── new/            # Crear turno
+│   │   ├── patients/           # Gestión de pacientes
+│   │   │   ├── [id]/           # Detalle del paciente
+│   │   │   │   ├── edit/       # Editar paciente
+│   │   │   │   └── PatientAppointmentsClient.tsx
+│   │   │   └── new/            # Nuevo paciente
+│   │   ├── prices/             # Gestión de precios
+│   │   ├── layout.tsx          # Layout del dashboard
+│   │   └── page.tsx            # Dashboard principal
+│   ├── auth/
+│   │   └── callback/           # Callback de Supabase Auth
+│   ├── login/                  # Página de login
+│   ├── layout.tsx              # Layout raíz
+│   └── globals.css             # Estilos globales
+├── components/                  # Componentes reutilizables
+│   ├── LayoutShell.tsx         # Estructura del dashboard
+│   ├── Sidebar.tsx             # Barra lateral
+│   ├── ExportCSVButton.tsx     # Exportador de datos
+│   └── ...
+├── lib/                         # Utilidades
+│   ├── supabase-server.ts      # Cliente Supabase (SSR)
+│   ├── supabase-browser.ts     # Cliente Supabase (Cliente)
+│   ├── supabase-client.ts      # Cliente Supabase genérico
+│   ├── supabase.ts             # Configuración compartida
+│   └── types.ts                # Tipos TypeScript
+├── supabase/                    # Scripts de BD
+│   ├── schema.sql              # Estructura inicial de BD
+│   └── prices_table.sql        # Tabla de precios
+├── middleware.ts                # Middleware de autenticación
+├── next.config.js              # Configuración Next.js
+├── tailwind.config.js          # Configuración Tailwind CSS
+├── tsconfig.json               # Configuración TypeScript
+├── package.json                # Dependencias
+└── README.md                   # Este archivo
+```
+
+---
+
+## 📋 Requisitos Previos
+
+- **Node.js** 18.0 o superior
+- **npm/yarn** o **pnpm**
+- Cuenta en [Supabase](https://supabase.com) (gratuita)
+- Cuenta en [Vercel](https://vercel.com) (para deploy, opcional)
+
+---
+
+## 🔧 Instalación y Configuración
+
+### 1️⃣ Crear el Proyecto en Supabase
+
+1. Ir a [supabase.com](https://supabase.com) → **New Project**
+2. Completar los datos:
+   - **Nombre del proyecto**: ej. `salud-turnos`
+   - **Password**: contraseña fuerte
+   - **Región**: South America (o la más cercana)
+3. Once creado, copiar las credenciales desde **Project Settings → API**:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL = https://xxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJ...
+   ```
+
+### 2️⃣ Inicializar la Base de Datos
+
+1. En Supabase → **SQL Editor**
+2. Crear una nueva query y ejecutar el contenido de `supabase/schema.sql`
+3. Luego ejecutar `supabase/prices_table.sql` para la tabla de precios
+
+> 💡 Esto creará todas las tablas necesarias: `users`, `patients`, `appointments`, `prices`, etc.
+
+### 3️⃣ Variables de Entorno
+
+Crear archivo `.env.local` en la raíz del proyecto:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
+
+> ⚠️ Las variables con prefijo `NEXT_PUBLIC_` son públicas. Las credenciales mostradas aquí (URL y anon key) son seguras para exponerlas.
+
+### 4️⃣ Desarrollo Local
 
 ```bash
 # Clonar el proyecto
@@ -39,65 +129,158 @@ cd salud-turnos
 # Instalar dependencias
 npm install
 
-# Crear archivo de variables de entorno
-cp .env.local.example .env.local
-# Editar .env.local con tus credenciales de Supabase
-
 # Iniciar servidor de desarrollo
 npm run dev
-# → http://localhost:3000
 ```
+
+Abrir [http://localhost:3000](http://localhost:3000) en el navegador.
 
 ---
 
-### 3. Deploy en Vercel (recomendado)
+## 🚀 Build y Deploy
 
-#### Opción A — Deploy desde GitHub (más fácil)
+### Desarrollo
 
-1. Subir el proyecto a GitHub:
+```bash
+npm run dev     # Servidor de desarrollo (3000)
+```
+
+### Producción
+
+```bash
+npm run build   # Compilar para producción
+npm run start   # Iniciar servidor de producción
+npm run lint    # Ejecutar ESLint
+```
+
+### Deploy en Vercel (Recomendado)
+
+#### Opción A — GitHub + Vercel (Más fácil)
+
+1. Subir a GitHub:
 ```bash
 git init
 git add .
-git commit -m "initial commit"
+git commit -m "chore: initial commit"
 git remote add origin https://github.com/TU_USUARIO/salud-turnos.git
 git push -u origin main
 ```
 
 2. Ir a [vercel.com](https://vercel.com) → **Add New Project**
-3. Importar el repositorio de GitHub
+3. Importar repositorio de GitHub
 4. En **Environment Variables** agregar:
    ```
-   NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+   NEXT_PUBLIC_SUPABASE_URL = https://xxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJ...
    ```
 5. Click en **Deploy** ✅
 
-#### Opción B — Deploy con Vercel CLI
+#### Opción B — Vercel CLI
 
 ```bash
-# Instalar Vercel CLI
 npm i -g vercel
 
-# Deployar
 vercel
-
-# Agregar las variables de entorno cuando las pida,
-# o configurarlas después en el dashboard de Vercel
+# Seguir las instrucciones interactivas
 ```
+
+#### Configurar Dominio (Opcional)
+
+En Vercel Dashboard → tu proyecto → **Settings → Domains** → agregar dominio personalizado.
 
 ---
 
-### 4. (Opcional) Dominio personalizado
+## 🔐 Autenticación y Seguridad
 
-En Vercel → tu proyecto → **Settings → Domains** → agregar tu dominio.
+### Row Level Security (RLS)
+
+El proyecto usa **RLS de Supabase** para proteger datos:
+
+- Solo **usuarios autenticados** pueden leer/escribir datos
+- Cada usuario solo ve sus propios datos (según `auth.uid()`)
+- Las políticas están configuradas en `supabase/schema.sql`
+
+### Middleware de Autenticación
+
+El archivo `middleware.ts` valida la sesión en cada request:
+
+- Verifica token de autenticación
+- Redirige usuarios no autenticados a `/login`
+- Mantiene la sesión activa
 
 ---
 
-## 📁 Estructura del proyecto
+## 📚 Scripts Disponibles
 
-```
-salud-turnos/
-├── app/
+| Comando | Descripción |
+|---------|------------|
+| `npm run dev` | Servidor de desarrollo con hot reload |
+| `npm run build` | Compilar para producción |
+| `npm run start` | Iniciar servidor de producción |
+| `npm run lint` | Verificar código con ESLint |
+
+---
+
+## 🎨 Personalización
+
+### Tailwind CSS
+
+Configuración en `tailwind.config.js`:
+- Sistema de colores personalizado
+- Tipografías: DM Sans, Sora
+- Extensiones de utilidades
+
+### Estilos Globales
+
+`app/globals.css` contiene:
+- Reseteo de estilos
+- Variables CSS personalizadas
+- Temas de color (light/dark)
+
+---
+
+## 🐛 Troubleshooting
+
+### "Error de conexión a Supabase"
+- Verificar variables de entorno en `.env.local`
+- Confirmar que Supabase project está activo
+- Validar URL y API key
+
+### "No veo los datos en la BD"
+- Ir a Supabase → SQL Editor
+- Ejecutar nuevamente `schema.sql`
+- Revisar Row Level Security (RLS) en tablas
+
+### "Error de autenticación"
+- Limpiar cookies del navegador
+- Verificar que la tabla `users` existe en Supabase
+- Revisar logs en Supabase → Auth → Logs
+
+---
+
+## 📝 Notas Importantes
+
+- ⚠️ Este es un proyecto **interno** — no compartir credenciales de Supabase
+- 🔑 Nunca commitar `.env.local` al repositorio (añadir a `.gitignore`)
+- 📱 Diseño responsive — funciona en móvil, tablet y desktop
+- 🌍 Interfaz en español
+
+---
+
+## 🤝 Contribuir
+
+Para contribuir al proyecto:
+
+1. Crear una rama: `git checkout -b feat/nueva-feature`
+2. Hacer commit: `git commit -m "feat: descripción"`
+3. Push: `git push origin feat/nueva-feature`
+4. Abrir Pull Request
+
+---
+
+## 📄 Licencia
+
+Proyecto privado para uso interno.
 │   ├── layout.tsx              # Layout principal con sidebar
 │   ├── page.tsx                # Dashboard
 │   ├── globals.css

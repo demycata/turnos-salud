@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { Heart, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
 
+
+
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
