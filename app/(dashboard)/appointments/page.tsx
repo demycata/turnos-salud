@@ -20,11 +20,12 @@ const ALL_STATUSES = [
 export default async function AppointmentsPage({
   searchParams,
 }: {
-  searchParams: { date?: string; status?: string }
+  searchParams: Promise<{ date?: string; status?: string }>
 }) {
+  const { date, status } = await searchParams
   const appointments = await getAppointments({
-    date: searchParams.date,
-    status: searchParams.status,
+    date,
+    status,
   })
 
   // Prepare flat data for CSV export
@@ -63,10 +64,10 @@ export default async function AppointmentsPage({
         <input
           name="date"
           type="date"
-          defaultValue={searchParams.date}
+          defaultValue={date}
           className="input-field w-44"
         />
-        <select name="status" defaultValue={searchParams.status} className="input-field w-40">
+        <select name="status" defaultValue={status} className="input-field w-40">
           {ALL_STATUSES.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
           ))}

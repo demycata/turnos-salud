@@ -11,12 +11,13 @@ import PatientAppointmentsOverview from './PatientAppointmentsOverview'
 
 export const dynamic = 'force-dynamic'
 
-export default async function PatientDetailPage({ params }: { params: { id: string } }) {
+export default async function PatientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   let patient, appointments
   try {
     ;[patient, appointments] = await Promise.all([
-      getPatient(params.id),
-      getAppointments({ patient_id: params.id }),
+      getPatient(id),
+      getAppointments({ patient_id: id }),
     ])
   } catch {
     notFound()
